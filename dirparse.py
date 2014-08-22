@@ -123,7 +123,7 @@ def validate_args(args=[]):
         else:
             for dir in args[1:]:
                 dir_base_abs = os.path.abspath(dir)
-                filenames_absolute.append(list(dir_base_abs))
+                filenames_absolute.extend(list(dir_base_abs))
     return
 
 validate_args(sys.argv)
