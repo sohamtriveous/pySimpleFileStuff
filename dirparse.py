@@ -6,6 +6,7 @@ import re
 import shutil
 import commands
 
+
 def find(pat, str):
     '''
     looks for a simple pattern
@@ -16,6 +17,7 @@ def find(pat, str):
     match = re.search(pat, str)
     if match:
         return True
+
 
 def path_join(path, filename):
     '''
@@ -34,6 +36,7 @@ def list(path):
     :param path: path to search for the pattern
     :return: a list of the abspaths of filenames with the said pattern
     '''
+    print 'Searching in directory:', path
     filenames = os.listdir(path)
     filenames_absolute = []
     for filename in filenames:
@@ -53,6 +56,7 @@ def copy_files(path, filenames_absolute=[]):
     :return:
     '''
     for filename_absolute in filenames_absolute:
+        print 'Copying', filename_absolute, 'to', path
         shutil.copy(filename_absolute, path)
     print len(filenames_absolute), 'file(s) copied!'
     return
@@ -87,26 +91,39 @@ def validate_args(args=[]):
     :param args: commandline arguments
     :return:
     '''
-    if len(args) != 2 and len(args) != 4:
+    length = len(args)
+
+    if length < 2:
         print 'usage: [--todir dir][--tozip zipfile] dir dir dir'
         return
+
+    operation = args[1]
     filenames_absolute = []
-    dir_base = args[1]
-    # convert from path to abspath
-    dir_base_abs = os.path.abspath(dir_base)
-    print 'Searching in directory:', dir_base_abs
-
-    filenames_absolute = list(dir_base_abs)
-
-    if len(args) > 2:
-        operation = args[2]
-        operation_param = args[3]
-        if operation == '--todir':
+    if operation == '--todir':
+        if length < 3:
+            print 'usage: [--todir dir][--tozip zipfile] dir dir dir'
+            return
+        operation_param = args[2]
+        operation_path_abs = os.path.abspath(operation_param)
+        for dir in args[3:]:
+            dir_base_abs = os.path.abspath(dir)
+            filenames_absolute.extend(list(dir_base_abs))
+        copy_files(operation_path_abs, filenames_absolute)
+    else:
+        if operation == '--tozip':
+            if length < 3:
+                print 'usage: [--todir dir][--tozip zipfile] dir dir dir'
+                return
+            operation_param = args[2]
             operation_path_abs = os.path.abspath(operation_param)
-            copy_files(operation_path_abs, filenames_absolute)
+            for dir in args[3:]:
+                dir_base_abs = os.path.abspath(dir)
+                filenames_absolute.extend(list(dir_base_abs))
+            zip_files(os.path.abspath(args[3]), operation_param, filenames_absolute)
         else:
-            if operation == '--tozip':
-                zip_files(dir_base_abs, operation_param, filenames_absolute)
+            for dir in args[1:]:
+                dir_base_abs = os.path.abspath(dir)
+                filenames_absolute.append(list(dir_base_abs))
     return
 
 validate_args(sys.argv)
